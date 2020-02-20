@@ -1,0 +1,25 @@
+{
+  "name": "crowdsale",
+  "version": "1.0.0",
+  "description": "A testnet crowdsale example",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "dev": "lite-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Luis Fernando",
+  "license": "ISC",
+  "devDependencies": {
+    "@truffle/contract": "^4.1.9",
+    "bootstrap": "4.3.1",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.2",
+    "lite-server": "^2.3.0",
+    "nodemon": "^1.17.3",
+    "truffle": "5.0.2"
+  }
+}
