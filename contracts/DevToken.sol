@@ -3,6 +3,7 @@ pragma solidity >=0.4.21 <0.7.0;
 contract DevToken {
     string public name = "Dev Token";
     string public symbol = "DEV";
+    uint256 public decimals = 18;
     uint256 public totalSupply;
 
     mapping(address => uint) public balanceOf;
