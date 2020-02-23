@@ -1,10 +1,8 @@
-const DevToken = artifacts.require("DevToken");
-const MyCrowdsale = artifacts.require("MyCrowdsale");
-
+const OZToken = artifacts.require("OZToken");
 
 module.exports = function (deployer) {
-    const totalSupply = 100000000;
-    deployer.deploy(DevToken, totalSupply);
-
-    deployer.deploy(MyCrowdsale);
+    let _name = "OZToken";
+    let _symbol = "OZT";
+    let _decimals = 18;
+    deployer.deploy(OZToken, _name, _symbol, _decimals);
 };

@@ -1,10 +1,10 @@
 pragma solidity >=0.4.21 <0.7.0;
 
 contract DevToken {
-    string public name = "Dev Token";
-    string public symbol = "DEV";
-    uint256 public decimals = 18;
-    uint256 public totalSupply;
+    string public name;
+    string public symbol;
+    uint256 public decimals;
+    uint256 public totalSupply = 100000000;
 
     mapping(address => uint) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
@@ -12,9 +12,11 @@ contract DevToken {
     event Transfer(address indexed _from, address indexed _to, uint _amount);
     event Approval(address indexed _owner, address indexed _spender, uint _amount);
 
-    constructor (uint256 _initialSupply) public {
-        balanceOf[msg.sender] = _initialSupply;
-        totalSupply = _initialSupply;
+    constructor (string memory _name, string memory _symbol, uint256 _decimals) public {
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
+        balanceOf[msg.sender] = totalSupply;
     }
 
     function transfer(address _to, uint _amount) public returns (bool) {
