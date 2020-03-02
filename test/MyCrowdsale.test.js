@@ -1,15 +1,23 @@
-import ether from './helpers/ether';
+const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const {
+	BN,
+	ether,
+	constants,
+	expectEvent,
+	expectRevert,
+} = require('@openzeppelin/test-helpers');
 
-const BN = require('bn.js');
 const chai = require('chai');
-chai.use(require('chai-bn')(BN))
-	.use(require('chai-as-promised'))
+const assert = chai.assert;
+chai.use(require('chai-as-promised'))
 	.should();
 
-const OZToken = artifacts.require("OZToken");
-const MyCrowdsale = artifacts.require("MyCrowdsale");
+const OZToken = contract.fromArtifact("OZToken");
+const MyCrowdsale = contract.fromArtifact("MyCrowdsale");
 
-contract('MyCrowdsale', ([deployer, wallet, investor1, investor2]) => {
+describe('MyCrowdsale', function () {
+	this.timeout(0);
+	const [ deployer, wallet, investor1, investor2 ] = accounts;
 
 	beforeEach(async function () {
 		// Token config
