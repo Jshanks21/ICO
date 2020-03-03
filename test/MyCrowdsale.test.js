@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const {
 	BN,
 	ether,
@@ -16,7 +16,7 @@ const OZToken = contract.fromArtifact("OZToken");
 const MyCrowdsale = contract.fromArtifact("MyCrowdsale");
 
 describe('MyCrowdsale', function () {
-	this.timeout(0);
+	this.timeout(0); // Prevents 2000ms timeout error
 	const [ deployer, wallet, investor1, investor2 ] = accounts;
 
 	beforeEach(async function () {
