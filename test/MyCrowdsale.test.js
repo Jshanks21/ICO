@@ -1,6 +1,7 @@
 const { accounts, contract } = require('@openzeppelin/test-environment');
 const {
 	BN,
+	time,
 	ether,
 	constants,
 	expectEvent,
@@ -36,18 +37,24 @@ describe('MyCrowdsale', function () {
 		this.rate = '500';
 		this.wallet = wallet;
 		this.cap = ether('100');
+		this.openingTime = await time.latest() + time.duration.weeks(1);
+		this.closingTime = await this.openingTime + time.duration.weeks(2);
 
 		// Deploy Crowdsale
 		this.crowdsale = await MyCrowdsale.new(
 			this.rate,
 			this.wallet,
 			this.token.address,
-			this.cap
+			this.cap,
+			this.openingTime,
+			this.closingTime
 		);
 
 		// Gives crowdsale contract MinterRole access
 		await this.token.addMinter(this.crowdsale.address);
 
+		// Advances time in tests to crowdsale openingTime
+		await time.increaseTo(this.openingTime + 1);
 	});
 
 	describe('crowdsale', function () {
@@ -107,6 +114,14 @@ describe('MyCrowdsale', function () {
 
 	});
 
+	describe('timed crowdsale', function () {
+
+		it('is open', async function () {
+			const isOpen = await this.crowdsale.isOpen();
+			isOpen.should.be.true;
+		});
+	});
+
 	describe('accepting payments', function () {
 
 		it('accepts payments', async function () {
@@ -148,7 +163,7 @@ describe('MyCrowdsale', function () {
 
 			it('succeeds and updates the contribution amount', async function () {
 				await this.crowdsale.buyTokens(investor2, { value: value, from: investor2 }).should.be.fulfilled;
-				const contribution = await this.crowdsale.getContributionAmount({ from: investor2 });
+				const contribution = await this.crowdsale.getContribution({ from: investor2 });
 				contribution.should.be.bignumber.equal(value);
 			});
 		});
