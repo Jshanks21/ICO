@@ -37,8 +37,8 @@ describe('MyCrowdsale', function () {
 		this.rate = '500';
 		this.wallet = wallet;
 		this.cap = ether('100');
-		this.openingTime = await time.latest() + time.duration.weeks(1);
-		this.closingTime = await this.openingTime + time.duration.weeks(2);
+		this.openingTime = (await time.latest()).add(time.duration.weeks(1));
+		this.closingTime = this.openingTime.add(time.duration.weeks(2));
 
 		// Deploy Crowdsale
 		this.crowdsale = await MyCrowdsale.new(
@@ -54,7 +54,8 @@ describe('MyCrowdsale', function () {
 		await this.token.addMinter(this.crowdsale.address);
 
 		// Advances time in tests to crowdsale openingTime
-		await time.increaseTo(this.openingTime + 1);
+		await time.increaseTo(this.openingTime.add(time.duration.seconds(1)));
+
 	});
 
 	describe('crowdsale', function () {
