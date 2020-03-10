@@ -52,7 +52,7 @@ contract MyCrowdsale is MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, Ownabl
      * @param _user Address of user who has contributed.
      * @return User's contribution so far.
      */
-    function getContribution(address _user) public view onlyOwner returns (uint256) {
+    function getUserContribution(address _user) public view onlyOwner returns (uint256) {
         return _contributions[_user];
     }
 
