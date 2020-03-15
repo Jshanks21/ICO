@@ -25,16 +25,18 @@ describe('MyCrowdsale', function () {
 		this.name = "OZToken";
 		this.symbol = "OZT";
 		this.decimals = 18;
+		this.initialSupply = new BN('10').pow(new BN('22'));
 
 		// Deploy Token
 		this.token = await OZToken.new(
 			this.name,
 			this.symbol,
-			this.decimals
+			this.decimals,
+			this.initialSupply
 		);
 
 		// Crowdsale config
-		this.rate = '500';
+		this.rate = new BN('1');
 		this.wallet = wallet;
 		this.cap = ether('100');
 		this.openingTime = (await time.latest()).add(time.duration.weeks(1));
@@ -53,9 +55,15 @@ describe('MyCrowdsale', function () {
 		// Gives crowdsale contract MinterRole access
 		await this.token.addMinter(this.crowdsale.address);
 
+		// Gives crowdsale contract WhitelistAdminRole access
+		await this.crowdsale.addWhitelistAdmin(this.crowdsale.address);
+
+		// Whitelists investor accounts
+		await this.crowdsale.addWhitelisted(investor1);
+		await this.crowdsale.addWhitelisted(investor2);
+
 		// Advances time in tests to crowdsale openingTime
 		await time.increaseTo(this.openingTime.add(time.duration.seconds(1)));
-
 	});
 
 	describe('crowdsale', function () {
@@ -115,11 +123,13 @@ describe('MyCrowdsale', function () {
 
 	});
 
-	describe('timed crowdsale', function () {
+	describe('whitelisted crowdsale', function () {
 
-		it('is open', async function () {
-			const isOpen = await this.crowdsale.isOpen();
-			isOpen.should.be.true;
+		it('rejects contributions from non-whitelisted investors', async function () {
+			await expectRevert(
+				this.crowdsale.buyTokens(deployer, { value: ether('1'), from: deployer }),
+				"WhitelistCrowdsale: beneficiary doesn't have the Whitelisted role"
+			)
 		});
 	});
 
