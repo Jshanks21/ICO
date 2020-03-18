@@ -18,7 +18,7 @@ describe('TimedCrowdsale', function () {
 	this.timeout(0); 
 	
 	// Reusable test accounts
-	const [ investor, wallet, purchaser, whitelister ] = accounts;
+	const [ investor, wallet, purchaser, owner ] = accounts;
 
 	// Token config
 	const name = "OZToken";
@@ -42,7 +42,7 @@ describe('TimedCrowdsale', function () {
 			symbol,
 			decimals,
 			tokenSupply,
-			{ from: whitelister }
+			{ from: owner }
 		);
 
 		// Timed Crowdsale config
@@ -82,20 +82,21 @@ describe('TimedCrowdsale', function () {
 				cap,
 				this.openingTime,
 				this.closingTime,
-				{ from: whitelister }
+				{ from: owner }
 			);
 
 			// Gives crowdsale contract MinterRole access
-			await this.token.addMinter(this.crowdsale.address, { from: whitelister });
+			await this.token.addMinter(this.crowdsale.address, { from: owner });
 
 			// Gives crowdsale contract WhitelistAdminRole access
-			await this.crowdsale.addWhitelistAdmin(this.crowdsale.address, { from: whitelister });
+			await this.crowdsale.addWhitelistAdmin(this.crowdsale.address, { from: owner });
 
 			// Whitelists test accounts
-			await this.crowdsale.addWhitelisted(investor, { from: whitelister });
+			await this.crowdsale.addWhitelisted(investor, { from: owner });
+			await this.crowdsale.addWhitelisted(purchaser, { from: owner });
 			
 			// Transfers total token supply to crowdsale
-			await this.token.transfer(this.crowdsale.address, tokenSupply, { from: whitelister });
+			await this.token.transfer(this.crowdsale.address, tokenSupply, { from: owner });
 		});
 
 		it('is open', async function () {
@@ -119,10 +120,87 @@ describe('TimedCrowdsale', function () {
 			it('should reject payments before opening time', async function () {
 				expect(await this.crowdsale.isOpen()).to.equal(false);
 				await expectRevert(this.crowdsale.send(value, { from: investor }), 'TimedCrowdsale: not open');
-				await expectRevert(this.crowdsale.buyTokens(investor, { from: investor, value: value }),
-					'TimedCrowdsale: not open');
+				await expectRevert(this.crowdsale.buyTokens(investor, { from: purchaser, value: value }),
+					'TimedCrowdsale: not open'
+				);
 			});
 
+			it('should accept payments after opening time', async function () {
+				await time.increaseTo(this.openingTime);
+				expect(await this.crowdsale.isOpen()).to.equal(true);
+				await this.crowdsale.send(value, { from: purchaser });
+				await this.crowdsale.buyTokens(investor, { from: purchaser, value: value });
+			});
+
+			it('should reject payments after closing time', async function () {
+				await time.increaseTo(this.afterClosingTime);
+				await expectRevert(this.crowdsale.send(value, { from: investor }), 'TimedCrowdsale: not open');
+				await expectRevert(this.crowdsale.buyTokens(investor, { from: purchaser, value: value }), 
+					'TimedCrowdsale: not open'
+				);
+			});
+		});
+
+		describe('extending closing time', function () {
+			it('should not reduce duration', async function () {
+				// Same closing time previously declared
+				await expectRevert(this.crowdsale.extendTime(this.closingTime, { from: owner }),
+					'TimedCrowdsale: new closing time is before current closing time'
+				);
+
+				// Before closing time previously declared
+				const newClosingTime = this.closingTime.sub(time.duration.seconds(1));
+				await expectRevert(this.crowdsale.extendTime(newClosingTime, { from: owner }), 
+					'TimedCrowdsale: new closing time is before current closing time');
+			});
+
+			context('before crowdsale opening time', function () {
+				beforeEach(async function () {
+					expect(await this.crowdsale.isOpen()).to.equal(false);
+					await expectRevert(this.crowdsale.send(value, { from: purchaser }), 'TimedCrowdsale: not open');
+				});
+
+				it('extends end time', async function () {
+					const newClosingTime = this.closingTime.add(time.duration.days(1));
+					const logs = await this.crowdsale.extendTime(newClosingTime, { from: owner });
+					expectEvent(logs, 'TimedCrowdsaleExtended', {
+						prevClosingTime: this.closingTime,
+						newClosingTime: newClosingTime,
+					});
+					expect(await this.crowdsale.closingTime()).to.be.bignumber.equal(newClosingTime);
+				});				
+			});
+
+			context('after crowdsale opening time & before closing time', function () {
+				beforeEach(async function () {
+					await time.increaseTo(this.openingTime);
+					expect(await this.crowdsale.isOpen()).to.equal(true);
+					await this.crowdsale.send(value, { from: purchaser });
+				});
+
+				it('extends the closing time', async function () {
+					const newClosingTime = this.closingTime.add(time.duration.days(1));
+					const logs = await this.crowdsale.extendTime(newClosingTime, { from: owner });
+					expectEvent(logs, 'TimedCrowdsaleExtended', {
+						prevClosingTime: this.closingTime,
+						newClosingTime: newClosingTime,
+					});
+					expect(await this.crowdsale.closingTime()).to.be.bignumber.equal(newClosingTime);
+				});
+			});
+
+			context('after crowdsale closing time', function () {
+				beforeEach(async function () {
+					await time.increaseTo(this.afterClosingTime);
+				});
+
+				it('reverts time extension', async function () {
+					const newClosingTime = await time.latest();
+					await expectRevert(this.crowdsale.extendTime(newClosingTime, { from: owner }),
+						'TimedCrowdsale: already closed'
+					);
+				});
+			});
 		});
 	});
-})
+});
