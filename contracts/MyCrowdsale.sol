@@ -4,8 +4,15 @@ import "@openzeppelin/contracts/crowdsale/emission/MintedCrowdsale.sol";
 import "@openzeppelin/contracts/crowdsale/validation/CappedCrowdsale.sol";
 import "@openzeppelin/contracts/crowdsale/validation/TimedCrowdsale.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/crowdsale/validation/WhitelistCrowdsale.sol";
 
-contract MyCrowdsale is MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, Ownable {
+contract MyCrowdsale is
+    MintedCrowdsale,
+    CappedCrowdsale,
+    TimedCrowdsale,
+    WhitelistCrowdsale,
+    Ownable
+{
     // Minimum contribution accepted by individual investor.
     uint256 public investorMinCap = 0.002 ether;
     // Maximum contribution accepted by individual investor.
@@ -52,7 +59,12 @@ contract MyCrowdsale is MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, Ownabl
      * @param _user Address of user who has contributed.
      * @return User's contribution so far.
      */
-    function getUserContribution(address _user) public view onlyOwner returns (uint256) {
+    function getUserContribution(address _user)
+        public
+        view
+        onlyOwner
+        returns (uint256)
+    {
         return _contributions[_user];
     }
 
@@ -89,4 +101,14 @@ contract MyCrowdsale is MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, Ownabl
         );
     }
 
+    /**
+     * @dev Extend crowdsale.
+     * @param newClosingTime Crowdsale closing time
+     */
+    function extendTime(uint256 newClosingTime)
+        public
+        onlyOwner
+    {
+        super._extendTime(newClosingTime);
+    }
 }
