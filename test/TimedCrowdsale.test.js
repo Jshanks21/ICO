@@ -24,11 +24,11 @@ describe('TimedCrowdsale', function () {
 	const name = "OZToken";
 	const symbol = "OZT";
 	const decimals = 18;
+	const tokenSupply = new BN('10').pow(new BN('22'));
 
 	// Crowdsale config
 	const rate = new BN('1');
 	const cap = ether('100');
-	const tokenSupply = new BN('10').pow(new BN('22'));
 
 	// Reusable test value
 	const value = ether('1');
