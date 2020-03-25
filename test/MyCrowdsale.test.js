@@ -3,7 +3,7 @@ const {
 	BN,
 	time,
 	ether,
-	constants,
+	constants, 
 	expectEvent,
 	expectRevert,
 } = require('@openzeppelin/test-helpers');
@@ -15,7 +15,7 @@ chai.use(require('chai-as-promised'))
 
 const OZToken = contract.fromArtifact("OZToken");
 const MyCrowdsale = contract.fromArtifact("MyCrowdsale");
-
+ 
 describe('MyCrowdsale', function () {
 	this.timeout(0); // Prevents 2000ms timeout error
 	const [ deployer, wallet, investor1, investor2 ] = accounts;
@@ -87,16 +87,6 @@ describe('MyCrowdsale', function () {
 		it('tracks the token', async function () {
 			const token = await this.crowdsale.token();
 			token.should.equal(this.token.address);
-		});
-	});
-
-	describe('minted crowdsale', function () {
-
-		it('mints tokens after purchase', async function () {
-			const originalTotalSupply = await this.token.totalSupply();
-			await this.crowdsale.sendTransaction({ value: ether('1'), from: investor1 });
-			const newTotalSupply = await this.token.totalSupply();
-			assert.isTrue(originalTotalSupply < newTotalSupply);
 		});
 	});
 
