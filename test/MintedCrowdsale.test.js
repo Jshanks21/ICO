@@ -51,7 +51,7 @@ describe('MintedCrowdsale', function () {
             { from: deployer }
         );
 
-        // Deploy complete crowdsale
+        // Deploy crowdsale
         this.crowdsale = await MyCrowdsale.new(
             rate,
             wallet,
@@ -130,7 +130,7 @@ describe('MintedCrowdsale', function () {
                 // Deploy non-mintable token instance
                 this.token = await testToken.new({ from: deployer });
 
-                // Deploy complete crowdsale instance
+                // Deploy crowdsale instance
                 this.crowdsale = await MyCrowdsale.new(
                     rate,
                     wallet,

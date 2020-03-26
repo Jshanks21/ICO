@@ -90,29 +90,6 @@ describe('MyCrowdsale', function () {
 		});
 	});
 
-	describe('capped crowdsale', function () {
-
-		it('does not exceed the hard cap', async function () {
-			const cap = await this.crowdsale.cap();
-			cap.should.be.bignumber.equal(this.cap);
-		});
-
-		it('rejects transactions below the minimum cap', async function () {
-			await expectRevert(
-				this.crowdsale.buyTokens(investor2, { value: ether('0.001'), from: investor2 }),
-				'Investor cap reached: Min amount is 0.002 Ether. Max amount is 50 Ether.'
-			)
-		});
-
-		it('rejects transactions above the maximum cap', async function () {
-			await expectRevert(
-				this.crowdsale.buyTokens(investor2, { value: ether('51'), from: investor2 }),
-				'Investor cap reached: Min amount is 0.002 Ether. Max amount is 50 Ether.'
-			)
-		});
-
-	});
-
 	describe('whitelisted crowdsale', function () {
 
 		it('rejects contributions from non-whitelisted investors', async function () {
@@ -132,42 +109,4 @@ describe('MyCrowdsale', function () {
 			await this.crowdsale.buyTokens(investor1, { value: value, from: purchaser }).should.be.fulfilled;
 		});
 	});
-
-	describe('token purchases', function () {
-
-		describe('when the investor has already met the minimum cap', function () {
-
-			it('allows the investor to contribute below the minimum cap', async function () {
-				// Minimum contribution met
-				const minCapReached = ether('1');
-				await this.crowdsale.buyTokens(investor2, { value: minCapReached, from: investor2 });
-				// Following contributions under minimum cap should be accepted
-				const belowMinCap = 1; // 1 wei
-				await this.crowdsale.buyTokens(investor2, { value: belowMinCap, from: investor2 }).should.be.fulfilled;
-			});
-		});
-
-		describe('when the total contributions exceeds the investor maximum cap', function () {
-
-			it('rejects the transaction', async function () {
-				// Maximum contribution met
-				const maxContribution = ether('50');
-				await this.crowdsale.buyTokens(investor1, { value: maxContribution, from: investor1 });
-				// All following contributions should be rejected
-				const smallestContribution = 1; // 1 wei
-				await this.crowdsale.buyTokens(investor1, { value: smallestContribution, from: investor1 }).should.be.rejectedWith('revert');
-			});
-		});
-
-		describe('when the contribution is within the valid range', function () {
-			const value = ether('2');
-
-			it('succeeds and updates the contribution amount', async function () {
-				await this.crowdsale.buyTokens(investor2, { value: value, from: investor2 }).should.be.fulfilled;
-				const contribution = await this.crowdsale.getContribution({ from: investor2 });
-				contribution.should.be.bignumber.equal(value);
-			});
-		});
-	});
-
 });
