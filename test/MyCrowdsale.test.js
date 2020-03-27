@@ -17,22 +17,26 @@ const OZToken = contract.fromArtifact("OZToken");
 const MyCrowdsale = contract.fromArtifact("MyCrowdsale");
  
 describe('MyCrowdsale', function () {
-	this.timeout(0); // Prevents 2000ms timeout error
-	const [ deployer, wallet, investor1, investor2 ] = accounts;
+	// Prevents 2000ms timeout error
+	this.timeout(0); 
+
+    // Reusable test accounts
+	const [ wallet, investor, purchaser ] = accounts;
 
 	beforeEach(async function () {
+
 		// Token config
 		this.name = "OZToken";
 		this.symbol = "OZT";
 		this.decimals = 18;
-		this.initialSupply = new BN('10').pow(new BN('22'));
+		this.tokenSupply = new BN('10').pow(new BN('22'));
 
 		// Deploy Token
 		this.token = await OZToken.new(
 			this.name,
 			this.symbol,
 			this.decimals,
-			this.initialSupply
+			this.tokenSupply
 		);
 
 		// Crowdsale config
@@ -55,12 +59,9 @@ describe('MyCrowdsale', function () {
 		// Gives crowdsale contract MinterRole access
 		await this.token.addMinter(this.crowdsale.address);
 
-		// Gives crowdsale contract WhitelistAdminRole access
-		await this.crowdsale.addWhitelistAdmin(this.crowdsale.address);
-
 		// Whitelists investor accounts
-		await this.crowdsale.addWhitelisted(investor1);
-		await this.crowdsale.addWhitelisted(investor2);
+		await this.crowdsale.addWhitelisted(investor);
+		await this.crowdsale.addWhitelisted(purchaser);
 
 		// Advances time in tests to crowdsale openingTime
 		await time.increaseTo(this.openingTime.add(time.duration.seconds(1)));
@@ -90,23 +91,12 @@ describe('MyCrowdsale', function () {
 		});
 	});
 
-	describe('whitelisted crowdsale', function () {
-
-		it('rejects contributions from non-whitelisted investors', async function () {
-			await expectRevert(
-				this.crowdsale.buyTokens(deployer, { value: ether('1'), from: deployer }),
-				"WhitelistCrowdsale: beneficiary doesn't have the Whitelisted role"
-			)
-		});
-	});
-
 	describe('accepting payments', function () {
 
 		it('accepts payments', async function () {
 			const value = ether('1');
-			const purchaser = investor2;
-			await this.crowdsale.sendTransaction({ value: value, from: investor1 }).should.be.fulfilled;
-			await this.crowdsale.buyTokens(investor1, { value: value, from: purchaser }).should.be.fulfilled;
+			await this.crowdsale.sendTransaction({ value: value, from: investor }).should.be.fulfilled;
+			await this.crowdsale.buyTokens(investor, { value: value, from: purchaser }).should.be.fulfilled;
 		});
 	});
 });

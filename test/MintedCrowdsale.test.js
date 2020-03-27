@@ -22,12 +22,9 @@ describe('MintedCrowdsale', function () {
     // Reusable test accounts
     const [ deployer, investor, wallet, purchaser ] = accounts;
 
-    // Crowdsale config
-    const rate = new BN('1000');
-    const cap = ether('100');
-
     // Reusable test variables
     const value = ether('5');
+    const rate = new BN('1');
     const expectedTokenAmount = rate.mul(value);
 
     beforeEach(async function () {
@@ -38,7 +35,9 @@ describe('MintedCrowdsale', function () {
         const decimals = 18;
         const totalSupply = new BN('10').pow(new BN('22'));
 
-        // Timed Crowdsale config
+		// Crowdsale config
+		this.wallet = wallet;
+		this.cap = ether('100');
         this.openingTime = (await time.latest()).add(time.duration.weeks(1));
         this.closingTime = this.openingTime.add(time.duration.weeks(1));
 
@@ -54,16 +53,13 @@ describe('MintedCrowdsale', function () {
         // Deploy crowdsale
         this.crowdsale = await MyCrowdsale.new(
             rate,
-            wallet,
+            this.wallet,
             this.token.address,
-            cap,
+            this.cap,
             this.openingTime,
             this.closingTime,
             { from: deployer }
         );
-
-        // Gives crowdsale contract WhitelistAdminRole access
-		await this.crowdsale.addWhitelistAdmin(this.crowdsale.address, { from: deployer });
 
 		// Whitelists investor accounts
 		await this.crowdsale.addWhitelisted(investor, { from: deployer });
@@ -133,9 +129,9 @@ describe('MintedCrowdsale', function () {
                 // Deploy crowdsale instance
                 this.crowdsale = await MyCrowdsale.new(
                     rate,
-                    wallet,
+                    this.wallet,
                     this.token.address,
-                    cap,
+                    this.cap,
                     this.openingTime,
                     this.closingTime,
                     { from: deployer }

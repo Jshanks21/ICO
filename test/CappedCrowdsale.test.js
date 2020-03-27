@@ -9,14 +9,10 @@ const MyCrowdsale = contract.fromArtifact('MyCrowdsale');
 
 describe('CappedCrowdsale', function () {
     // Prevents 2000ms timeout error
-    this.timeout(0); 
-        
-    // Reusable test accounts
-    const [ deployer, investor, wallet, purchaser, newBalance1, newBalance2 ] = accounts;
+    this.timeout(0);
 
-    // Crowdsale config
-    const rate = new BN('1');
-    const cap = ether('100');
+    // Reusable test accounts
+    const [deployer, investor, wallet, purchaser, newBalance1, newBalance2, newBalance3, newBalance4] = accounts;
 
     // Token config
     const name = "OZToken";
@@ -25,7 +21,7 @@ describe('CappedCrowdsale', function () {
     const tokenSupply = new BN('10').pow(new BN('22'));
 
     // Reusable test variables
-    const value = ether('15');
+    const value = ether('5');
     const minCap = ether('0.002');
     const maxContribution = ether('50');
     const smallestContribution = 1; // 1 wei
@@ -33,7 +29,10 @@ describe('CappedCrowdsale', function () {
 
     beforeEach(async function () {
 
-        // Timed Crowdsale config
+		// Crowdsale config
+		this.rate = new BN('1');
+		this.wallet = wallet;
+		this.cap = ether('100');
         this.openingTime = (await time.latest()).add(time.duration.weeks(1));
         this.closingTime = this.openingTime.add(time.duration.weeks(1));
 
@@ -48,27 +47,25 @@ describe('CappedCrowdsale', function () {
 
         // Deploy crowdsale
         this.crowdsale = await MyCrowdsale.new(
-            rate,
-            wallet,
+            this.rate,
+            this.wallet,
             this.token.address,
-            cap,
+            this.cap,
             this.openingTime,
             this.closingTime,
             { from: deployer }
         );
 
-		// Gives crowdsale contract MinterRole access
-		await this.token.addMinter(this.crowdsale.address, { from: deployer });
-
-        // Gives crowdsale contract WhitelistAdminRole access
-        await this.crowdsale.addWhitelistAdmin(this.crowdsale.address, { from: deployer });
+        // Gives crowdsale contract MinterRole access
+        await this.token.addMinter(this.crowdsale.address, { from: deployer });
 
         // Whitelists investor accounts
-        await this.crowdsale.addWhitelisted(wallet, { from: deployer });
-        await this.crowdsale.addWhitelisted(investor, { from: deployer }); 
-        await this.crowdsale.addWhitelisted(purchaser, { from: deployer }); 
+        await this.crowdsale.addWhitelisted(investor, { from: deployer });
+        await this.crowdsale.addWhitelisted(purchaser, { from: deployer });
         await this.crowdsale.addWhitelisted(newBalance1, { from: deployer }); 
         await this.crowdsale.addWhitelisted(newBalance2, { from: deployer });
+        await this.crowdsale.addWhitelisted(newBalance3, { from: deployer }); 
+        await this.crowdsale.addWhitelisted(newBalance4, { from: deployer });
 
         // Advances time in tests to crowdsale openingTime
         await time.increaseTo(this.openingTime.add(time.duration.seconds(1)));
@@ -80,20 +77,20 @@ describe('CappedCrowdsale', function () {
     it('rejects a cap of zero', async function () {
         await expectRevert(
             MyCrowdsale.new(
-                rate, 
-                wallet, 
-                this.token.address, 
-                0, 
-                this.openingTime, 
-                this.closingTime, 
+                this.rate,
+                this.wallet,
+                this.token.address,
+                0,
+                this.openingTime,
+                this.closingTime,
                 { from: deployer }
-            ), 
+            ),
             'CappedCrowdsale: cap is 0'
         );
     });
 
     it('does not exceed the hard cap', async function () {
-        expect(await this.crowdsale.cap()).to.be.bignumber.equal(cap);
+        expect(await this.crowdsale.cap()).to.be.bignumber.equal(this.cap);
     });
 
     it('rejects payments below the investor minimum cap', async function () {
@@ -115,20 +112,20 @@ describe('CappedCrowdsale', function () {
         context('when the investor has already met the minimum cap', function () {
 
             it('allows the investor to contribute below the minimum cap', async function () {
-				await this.crowdsale.buyTokens(investor, { value: minCap, from: investor });
-				await this.crowdsale.buyTokens(investor, { value: smallestContribution, from: investor });
-			});
+                await this.crowdsale.buyTokens(investor, { value: minCap, from: investor });
+                await this.crowdsale.buyTokens(investor, { value: smallestContribution, from: investor });
+            });
         });
 
         context('when the investor has already met the maximum cap', function () {
 
             it('rejects the transaction', async function () {
-				await this.crowdsale.buyTokens(investor, { value: maxContribution, from: investor });
+                await this.crowdsale.buyTokens(investor, { value: maxContribution, from: investor });
                 await expectRevert(
                     this.crowdsale.buyTokens(investor, { value: smallestContribution, from: investor }),
                     'Investor cap reached: Min amount is 0.002 Ether. Max amount is 50 Ether.'
-                );				
-			});
+                );
+            });
         });
 
         context('when the contribution is within the valid range', function () {
@@ -136,7 +133,7 @@ describe('CappedCrowdsale', function () {
             it('accepts the contribution amount', async function () {
                 await this.crowdsale.buyTokens(investor, { value, from: investor });
                 expect(await this.crowdsale.getContribution({ from: investor })).to.be.bignumber.equal(value);
-			});
+            });
         });
     });
 
@@ -154,12 +151,9 @@ describe('CappedCrowdsale', function () {
         });
 
         it('should reach cap if cap amount is sent', async function () {
-            await this.crowdsale.send(maxContribution, { from: purchaser });
-            await this.crowdsale.send(maxContribution, { from: wallet });
+            await this.crowdsale.send(maxContribution, { from: newBalance3 });
+            await this.crowdsale.send(maxContribution, { from: newBalance4 });
             expect(await this.crowdsale.capReached()).to.equal(true);
-          });
-
+        });
     });
-
-
 });

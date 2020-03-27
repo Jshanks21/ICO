@@ -26,10 +26,6 @@ describe('TimedCrowdsale', function () {
 	const decimals = 18;
 	const tokenSupply = new BN('10').pow(new BN('22'));
 
-	// Crowdsale config
-	const rate = new BN('1');
-	const cap = ether('100');
-
 	// Reusable test value
 	const value = ether('1');
 
@@ -45,7 +41,10 @@ describe('TimedCrowdsale', function () {
 			{ from: owner }
 		);
 
-		// Timed Crowdsale config
+		// Crowdsale config
+		this.rate = new BN('1');
+		this.wallet = wallet;
+		this.cap = ether('100');
 		this.openingTime = (await time.latest()).add(time.duration.weeks(1));
 		this.closingTime = this.openingTime.add(time.duration.weeks(1));
         
@@ -56,19 +55,19 @@ describe('TimedCrowdsale', function () {
     
     it('reverts if the opening time is in the past', async function () {
         await expectRevert(MyCrowdsale.new(
-            rate, wallet, this.token.address, cap, (await time.latest()).sub(time.duration.days(1)), this.closingTime
+            this.rate, this.wallet, this.token.address, this.cap, (await time.latest()).sub(time.duration.days(1)), this.closingTime
         ), 'TimedCrowdsale: opening time is before current time')
 	});
 	
 	it('reverts if the closing time is before the opening time', async function () {
 		await expectRevert(MyCrowdsale.new(
-			rate, wallet, this.token.address, cap, this.openingTime, this.beforeOpeningTime
+			this.rate, this.wallet, this.token.address, this.cap, this.openingTime, this.beforeOpeningTime
 		), 'TimedCrowdsale: opening time is not before closing time'); 
 	});
 
 	it('reverts if the closing time equals the opening time', async function () {
 		await expectRevert(MyCrowdsale.new(
-			rate, wallet, this.token.address, cap, this.openingTime, this.openingTime
+			this.rate, this.wallet, this.token.address, this.cap, this.openingTime, this.openingTime
 		), 'TimedCrowdsale: opening time is not before closing time')
 	});
 	
@@ -76,10 +75,10 @@ describe('TimedCrowdsale', function () {
 		beforeEach(async function () {
 			// Deploy Crowdsale
 			this.crowdsale = await MyCrowdsale.new(
-				rate,
-				wallet,
+				this.rate,
+				this.wallet,
 				this.token.address,
-				cap,
+				this.cap,
 				this.openingTime,
 				this.closingTime,
 				{ from: owner }
@@ -87,9 +86,6 @@ describe('TimedCrowdsale', function () {
 
 			// Gives crowdsale contract MinterRole access
 			await this.token.addMinter(this.crowdsale.address, { from: owner });
-
-			// Gives crowdsale contract WhitelistAdminRole access
-			await this.crowdsale.addWhitelistAdmin(this.crowdsale.address, { from: owner });
 
 			// Whitelists test accounts
 			await this.crowdsale.addWhitelisted(investor, { from: owner });
