@@ -3,13 +3,9 @@ const {
 	BN,
 	time,
 	ether,
-	constants, 
-	expectEvent,
-	expectRevert,
 } = require('@openzeppelin/test-helpers');
 
 const chai = require('chai');
-const assert = chai.assert;
 chai.use(require('chai-as-promised'))
 	.should();
 
@@ -45,6 +41,7 @@ describe('MyCrowdsale', function () {
 		this.cap = ether('100');
 		this.openingTime = (await time.latest()).add(time.duration.weeks(1));
 		this.closingTime = this.openingTime.add(time.duration.weeks(2));
+		this.goal = ether('80');
 
 		// Deploy Crowdsale
 		this.crowdsale = await MyCrowdsale.new(
@@ -53,7 +50,8 @@ describe('MyCrowdsale', function () {
 			this.token.address,
 			this.cap,
 			this.openingTime,
-			this.closingTime
+			this.closingTime,
+			this.goal
 		);
 
 		// Gives crowdsale contract MinterRole access
