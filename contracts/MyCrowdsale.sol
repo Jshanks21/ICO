@@ -1,16 +1,18 @@
-pragma solidity >=0.4.21 <0.7.0;
+pragma solidity ^0.5.0;
 
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/crowdsale/emission/MintedCrowdsale.sol";
 import "@openzeppelin/contracts/crowdsale/validation/CappedCrowdsale.sol";
 import "@openzeppelin/contracts/crowdsale/validation/TimedCrowdsale.sol";
-import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/crowdsale/validation/WhitelistCrowdsale.sol";
+import "@openzeppelin/contracts/crowdsale/distribution/RefundablePostDeliveryCrowdsale.sol";
 
 contract MyCrowdsale is
     MintedCrowdsale,
     CappedCrowdsale,
     TimedCrowdsale,
     WhitelistCrowdsale,
+    RefundablePostDeliveryCrowdsale,
     Ownable
 {
     // Minimum contribution accepted by individual investor.
@@ -29,20 +31,29 @@ contract MyCrowdsale is
      * @param _cap The total amount the crowdsale can receive.
      * @param _openingTime Time the crowdsale is set to start accepting funds.
      * @param _closingTime Time the crowdsale is set to stop accepting funds.
-     */
+     * @param _goal Funding goal.
+
+    */
     constructor(
         uint256 _rate,
         address payable _wallet,
         IERC20 _token,
         uint256 _cap,
         uint256 _openingTime,
-        uint256 _closingTime
+        uint256 _closingTime,
+        uint256 _goal
     )
         public
         Crowdsale(_rate, _wallet, _token)
         CappedCrowdsale(_cap)
         TimedCrowdsale(_openingTime, _closingTime)
-    {}
+        RefundableCrowdsale(_goal)
+    {
+        require(
+            _goal <= _cap,
+            "The crowdsale goal must be less than the cap."
+        );
+    }
 
     /**
      * @dev Returns the amount contributed so far by the caller.
@@ -82,7 +93,7 @@ contract MyCrowdsale is
         uint256 _newContribution = _existingContribution.add(weiAmount);
         require(
             _newContribution >= investorMinCap &&
-                _newContribution <= investorMaxCap,
+            _newContribution <= investorMaxCap,
             "Investor cap reached: Min amount is 0.002 Ether. Max amount is 50 Ether."
         );
     }
