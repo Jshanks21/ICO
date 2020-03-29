@@ -40,6 +40,7 @@ describe('MintedCrowdsale', function () {
 		this.cap = ether('100');
         this.openingTime = (await time.latest()).add(time.duration.weeks(1));
         this.closingTime = this.openingTime.add(time.duration.weeks(1));
+        this.goal = ether('100');
 
         // Deploy token
         this.token = await OZToken.new(
@@ -58,6 +59,7 @@ describe('MintedCrowdsale', function () {
             this.cap,
             this.openingTime,
             this.closingTime,
+            this.goal,
             { from: deployer }
         );
 
@@ -134,6 +136,7 @@ describe('MintedCrowdsale', function () {
                     this.cap,
                     this.openingTime,
                     this.closingTime,
+                    this.goal,
                     { from: deployer }
                 );
 

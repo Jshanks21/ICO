@@ -35,6 +35,7 @@ describe('CappedCrowdsale', function () {
 		this.cap = ether('100');
         this.openingTime = (await time.latest()).add(time.duration.weeks(1));
         this.closingTime = this.openingTime.add(time.duration.weeks(1));
+        this.goal = ether('80');
 
         // Deploy token
         this.token = await OZToken.new(
@@ -53,6 +54,7 @@ describe('CappedCrowdsale', function () {
             this.cap,
             this.openingTime,
             this.closingTime,
+            this.goal,
             { from: deployer }
         );
 
@@ -83,6 +85,7 @@ describe('CappedCrowdsale', function () {
                 0,
                 this.openingTime,
                 this.closingTime,
+                this.goal,
                 { from: deployer }
             ),
             'CappedCrowdsale: cap is 0'

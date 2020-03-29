@@ -47,6 +47,7 @@ describe('TimedCrowdsale', function () {
 		this.cap = ether('100');
 		this.openingTime = (await time.latest()).add(time.duration.weeks(1));
 		this.closingTime = this.openingTime.add(time.duration.weeks(1));
+		this.goal = ether('80');
         
         // Used to test before openingTime and after closingTime.
         this.afterClosingTime = await this.closingTime.add(time.duration.seconds(1));
@@ -55,19 +56,19 @@ describe('TimedCrowdsale', function () {
     
     it('reverts if the opening time is in the past', async function () {
         await expectRevert(MyCrowdsale.new(
-            this.rate, this.wallet, this.token.address, this.cap, (await time.latest()).sub(time.duration.days(1)), this.closingTime
+            this.rate, this.wallet, this.token.address, this.cap, (await time.latest()).sub(time.duration.days(1)), this.closingTime, this.goal
         ), 'TimedCrowdsale: opening time is before current time')
 	});
 	
 	it('reverts if the closing time is before the opening time', async function () {
 		await expectRevert(MyCrowdsale.new(
-			this.rate, this.wallet, this.token.address, this.cap, this.openingTime, this.beforeOpeningTime
+			this.rate, this.wallet, this.token.address, this.cap, this.openingTime, this.beforeOpeningTime, this.goal
 		), 'TimedCrowdsale: opening time is not before closing time'); 
 	});
 
 	it('reverts if the closing time equals the opening time', async function () {
 		await expectRevert(MyCrowdsale.new(
-			this.rate, this.wallet, this.token.address, this.cap, this.openingTime, this.openingTime
+			this.rate, this.wallet, this.token.address, this.cap, this.openingTime, this.openingTime, this.goal
 		), 'TimedCrowdsale: opening time is not before closing time')
 	});
 	
@@ -81,6 +82,7 @@ describe('TimedCrowdsale', function () {
 				this.cap,
 				this.openingTime,
 				this.closingTime,
+				this.goal,
 				{ from: owner }
 			);
 

@@ -2,8 +2,6 @@ const { accounts, contract } = require('@openzeppelin/test-environment');
 
 const { BN, ether, time, expectRevert } = require('@openzeppelin/test-helpers');
 
-const { expect } = require('chai');
-
 const OZToken = contract.fromArtifact('OZToken');
 const MyCrowdsale = contract.fromArtifact('MyCrowdsale');
 
@@ -31,6 +29,7 @@ describe('WhitelistCrowdsale', function () {
 		this.cap = ether('100');
         this.openingTime = (await time.latest()).add(time.duration.weeks(1));
         this.closingTime = this.openingTime.add(time.duration.weeks(1));
+        this.goal = ether('80');
 
         // Deploy token
         this.token = await OZToken.new(
@@ -49,6 +48,7 @@ describe('WhitelistCrowdsale', function () {
             this.cap,
             this.openingTime,
             this.closingTime,
+            this.goal,
             { from: whitelister }
         );
 
