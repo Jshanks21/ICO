@@ -12,9 +12,10 @@ contract MyCrowdsale is
     CappedCrowdsale,
     TimedCrowdsale,
     WhitelistCrowdsale,
-    RefundablePostDeliveryCrowdsale,
+    RefundableCrowdsale,
     Ownable
 {
+
     // Minimum contribution accepted by individual investor.
     uint256 public investorMinCap = 0.002 ether;
     // Maximum contribution accepted by individual investor.
@@ -31,7 +32,7 @@ contract MyCrowdsale is
      * @param _cap The total amount the crowdsale can receive.
      * @param _openingTime Time the crowdsale is set to start accepting funds.
      * @param _closingTime Time the crowdsale is set to stop accepting funds.
-     * @param _goal Funding goal.
+     * @param _goal Funcding goal.
 
     */
     constructor(
