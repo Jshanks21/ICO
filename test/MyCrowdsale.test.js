@@ -63,6 +63,9 @@ describe('MyCrowdsale', function () {
 
 		// Advances time in tests to crowdsale openingTime
 		await time.increaseTo(this.openingTime.add(time.duration.seconds(1)));
+
+        // Transfers total token supply to crowdsale
+        await this.token.transfer(this.crowdsale.address, this.tokenSupply);
 	});
 
 	describe('crowdsale', function () {
