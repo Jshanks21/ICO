@@ -3,8 +3,7 @@ const { accounts, contract } = require('@openzeppelin/test-environment');
 const { 
     BN, 
     time,
-    ether, 
-    balance,
+    ether,
     expectEvent, 
     expectRevert
 } = require('@openzeppelin/test-helpers');
@@ -23,8 +22,8 @@ describe('MintedCrowdsale', function () {
     const [ deployer, investor, wallet, purchaser ] = accounts;
 
     // Reusable test variables
-    const value = ether('5');
-    const rate = new BN('1');
+    const value = ether('3');
+    const rate = new BN('500');
     const expectedTokenAmount = rate.mul(value);
 
     beforeEach(async function () {
@@ -100,7 +99,7 @@ describe('MintedCrowdsale', function () {
 
         describe('high-level purchase', function  () {
             it('should log purchases', async function () {
-                const logs = await this.crowdsale.sendTransaction({ value, from: investor });
+                const logs = await this.crowdsale.buyTokens(investor, { value, from: investor });
                 expectEvent(logs, 'TokensPurchased', {
                     purchaser: investor,
                     beneficiary: investor,

@@ -19,7 +19,7 @@ describe('WhitelistCrowdsale', function () {
     const tokenSupply = new BN('10').pow(new BN('22'));
 
     // Reusable test variables
-    const value = ether('15');
+    const value = ether('5');
 
     beforeEach(async function () {
 

@@ -33,6 +33,8 @@ describe('RefundableCrowdsale', function () {
     const rate = new BN('1');
     const cap = ether('100');
     const goal = ether('25');
+    const icoStage = new BN('1');
+
 
     before(async function () {
     // Advance to the next block to correctly read time in the solidity "now" function interpreted by ganache
@@ -54,9 +56,7 @@ describe('RefundableCrowdsale', function () {
             decimals,
             totalSupply,
             { from: deployer }
-        );
-
-        
+        );        
     });
 
     it('rejects a goal of zero', async function () {
@@ -112,7 +112,8 @@ describe('RefundableCrowdsale', function () {
 
             context('with unreached goal', function () {
                 beforeEach(async function () {
-                    await this.crowdsale.sendTransaction({ value: lessThanGoal, from: investor });
+                    await this.crowdsale.setCrowdsaleStage(icoStage, { from: deployer })
+                    await this.crowdsale.sendTransaction({ value: lessThanGoal, from: investor }); 
                 });
 
                 context('after closing time and finalization', function () {
@@ -131,6 +132,7 @@ describe('RefundableCrowdsale', function () {
 
             context('with reached goal', function () {
                 beforeEach(async function () {
+                    await this.crowdsale.setCrowdsaleStage(icoStage, { from: deployer });
                     await this.crowdsale.sendTransaction({ value: goal, from: investor });
                 });
 
