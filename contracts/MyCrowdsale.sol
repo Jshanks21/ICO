@@ -20,38 +20,47 @@ contract MyCrowdsale is
     uint256 public investorMinCap = 0.002 ether;
     // Maximum contribution accepted by individual investor.
     uint256 public investorMaxCap = 50 ether;
+    // Rate of tokens per wei during presale phase.
+    uint256 public preIcoRate = 500;
+    // Rate of tokens per wei during open ICO phase.
+    uint256 public icoRate = 250;
 
     // Tracks total contributions from individual investors.
     mapping(address => uint256) private _contributions;
 
+    // Crowdsale Stages
+    enum CrowdsaleStage { PreICO, ICO }
+    // Default to presale stage
+    CrowdsaleStage public stage = CrowdsaleStage.PreICO;
+
     /**
      * @dev Constructor, sets initial values for crowdsale. See {Crowdsale-constructor} in OpenZeppelin library.
-     * @param _rate Number of tokens per wei.
-     * @param _wallet Address to receive all collected funds from crowdsale.
-     * @param _token Address of the token to be sold.
-     * @param _cap The total amount the crowdsale can receive.
-     * @param _openingTime Time the crowdsale is set to start accepting funds.
-     * @param _closingTime Time the crowdsale is set to stop accepting funds.
-     * @param _goal Funcding goal.
+     * @param rate Number of tokens per wei.
+     * @param wallet Address to receive all collected funds from crowdsale.
+     * @param token Address of the token to be sold.
+     * @param cap The total amount the crowdsale can receive.
+     * @param openingTime Time the crowdsale is set to start accepting funds.
+     * @param closingTime Time the crowdsale is set to stop accepting funds.
+     * @param goal Funding goal.
 
     */
     constructor(
-        uint256 _rate,
-        address payable _wallet,
-        IERC20 _token,
-        uint256 _cap,
-        uint256 _openingTime,
-        uint256 _closingTime,
-        uint256 _goal
+        uint256 rate,
+        address payable wallet,
+        IERC20 token,
+        uint256 cap,
+        uint256 openingTime,
+        uint256 closingTime,
+        uint256 goal
     )
         public
-        Crowdsale(_rate, _wallet, _token)
-        CappedCrowdsale(_cap)
-        TimedCrowdsale(_openingTime, _closingTime)
-        RefundableCrowdsale(_goal)
+        Crowdsale(rate, wallet, token)
+        CappedCrowdsale(cap)
+        TimedCrowdsale(openingTime, closingTime)
+        RefundableCrowdsale(goal)
     {
         require(
-            _goal <= _cap,
+            goal <= cap,
             "The crowdsale goal must be less than the cap."
         );
     }
@@ -66,18 +75,57 @@ contract MyCrowdsale is
     }
 
     /**
+     * @dev Allows admin to update the crowdsale stage.
+     * Corresponds to 0 for PreICO and 1 for ICO in enum.
+     * @param currentStage Crowdsale stage.
+     */
+    function setCrowdsaleStage(uint256 currentStage) public onlyOwner {
+        if(uint(CrowdsaleStage.PreICO) == currentStage) {
+            stage = CrowdsaleStage.PreICO;
+        } else if(uint(CrowdsaleStage.ICO) == currentStage) {
+            stage = CrowdsaleStage.ICO;
+        }
+    }
+
+    /**
+     * @dev Overrides Crowdsale token conversion depending on current ICO stage.
+     * @param weiAmount Value in wei to be converted into tokens
+     * @return Number of tokens that can be purchased with the specified _weiAmount
+     */
+    function _getTokenAmount(uint256 weiAmount) internal view returns (uint256) {
+        if(stage == CrowdsaleStage.PreICO) {
+            return weiAmount.mul(preIcoRate);
+        } else if (stage == CrowdsaleStage.ICO) {
+            return weiAmount.mul(icoRate);
+        }
+    }
+
+    /**
+     * @dev Overrides Crowdsale fund forwarding, sending funds to wallet during preICO stage
+     * and escrow during ICO stage.
+     */
+    function _forwardFunds() internal {
+        address payable preICOWallet = wallet();
+        if(stage == CrowdsaleStage.PreICO) {
+            preICOWallet.transfer(msg.value);
+        } else if (stage == CrowdsaleStage.ICO) {
+            super._forwardFunds();
+        }
+    }
+
+    /**
      * @dev Returns the amount contributed so far by any contributor. Modified for privacy
      * so only the owner of the crowdsale contract can track contributions by user.
-     * @param _user Address of user who has contributed.
+     * @param user Address of user who has contributed.
      * @return User's contribution so far.
      */
-    function getUserContribution(address _user)
+    function getUserContribution(address user)
         public
         view
         onlyOwner
         returns (uint256)
     {
-        return _contributions[_user];
+        return _contributions[user];
     }
 
     /**
