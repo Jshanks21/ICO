@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Pausable.sol";
 import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/crowdsale/emission/MintedCrowdsale.sol";
 import "@openzeppelin/contracts/crowdsale/validation/CappedCrowdsale.sol";
@@ -32,6 +34,12 @@ contract MyCrowdsale is
     enum CrowdsaleStage { PreICO, ICO }
     // Default to presale stage
     CrowdsaleStage public stage = CrowdsaleStage.PreICO;
+
+    // Token distribution
+    uint256 public foundersPercent   = 10;
+    uint256 public foundationPercent = 10;
+    uint256 public partnersPercent   = 10;
+    uint256 public tokenSalePercent  = 70;
 
     /**
      * @dev Constructor, sets initial values for crowdsale. See {Crowdsale-constructor} in OpenZeppelin library.
@@ -145,6 +153,19 @@ contract MyCrowdsale is
             _newContribution <= investorMaxCap,
             "Investor cap reached: Min amount is 0.002 Ether. Max amount is 50 Ether."
         );
+    }
+
+    /**
+     * @dev Enables token transfers when called by the owner.
+     */
+    function _finalization() internal {
+        if(goalReached()) {
+            ERC20Mintable _mintableToken = ERC20Mintable(address(token()));
+            _mintableToken.renounceMinter();
+            ERC20Pausable _pausableToken = ERC20Pausable(address(token()));
+            _pausableToken.unpause();
+        }
+        super._finalization();
     }
 
     /**
