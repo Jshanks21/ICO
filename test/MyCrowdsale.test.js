@@ -70,6 +70,9 @@ describe('MyCrowdsale', function () {
 			{ from: deployer }
 		);
 
+		// Gives the crowdsale the pauser role
+		await this.token.addPauser(this.crowdsale.address, { from: deployer });
+
 		// Gives crowdsale contract MinterRole access
 		await this.token.addMinter(this.crowdsale.address, { from: deployer });
 
@@ -132,6 +135,7 @@ describe('MyCrowdsale', function () {
 			describe('transfers', function () {
 				beforeEach(async function () {
 					this.preWalletBalance = await balance.current(wallet);
+					await this.token.pause({ from: deployer });
 					await this.crowdsale.buyTokens(investor, { value });
 					await time.increaseTo(this.afterClosingTime);
 					await this.crowdsale.finalize({ from: other });		

@@ -123,9 +123,9 @@ describe('CappedCrowdsale', function () {
         context('when the investor has already met the maximum cap', function () {
 
             it('rejects the transaction', async function () {
-                await this.crowdsale.buyTokens(investor, { value: maxContribution, from: investor });
+                await this.crowdsale.buyTokens(purchaser, { value: maxContribution, from: purchaser });
                 await expectRevert(
-                    this.crowdsale.buyTokens(investor, { value: smallestContribution, from: investor }),
+                    this.crowdsale.buyTokens(purchaser, { value: smallestContribution, from: purchaser }),
                     'Investor cap reached: Min amount is 0.002 Ether. Max amount is 50 Ether.'
                 );
             });

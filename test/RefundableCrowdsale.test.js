@@ -81,6 +81,9 @@ describe('RefundableCrowdsale', function () {
                 { from: deployer }
             );
 
+            // Gives the crowdsale the pauser role
+            await this.token.addPauser(this.crowdsale.address, { from: deployer });
+
 			// Gives crowdsale contract MinterRole access
             await this.token.addMinter(this.crowdsale.address, { from: deployer });
             
@@ -138,6 +141,7 @@ describe('RefundableCrowdsale', function () {
 
                 context('after closing time and finalization', function () {
                     beforeEach(async function () {
+                        await this.token.pause({ from: deployer });
                         await time.increaseTo(this.afterClosingTime);
                         await this.crowdsale.finalize({ from: other });
                     });
