@@ -2,13 +2,14 @@ pragma solidity >=0.4.21 <0.7.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Pausable.sol";
 
 /**
  * @title OZToken
  * @notice This token was created for use in MyCrowdsale.sol
  * @dev This is a basic ERC-20 implementation using the OpenZeppelin library for base and extended functions
  */
-contract OZToken is ERC20Mintable, ERC20Detailed {
+contract OZToken is ERC20Mintable, ERC20Pausable, ERC20Detailed {
 
 	/**
      * @dev Sets the values for `name`, `symbol`, and `decimals`. All three of
