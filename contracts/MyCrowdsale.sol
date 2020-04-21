@@ -41,6 +41,10 @@ contract MyCrowdsale is
     uint256 public partnersPercent   = 10;
     uint256 public tokenSalePercent  = 70;
 
+    address private _foundersFund;
+    address private _foundationFund;
+    address private _partnersFund;
+
     /**
      * @dev Constructor, sets initial values for crowdsale. See {Crowdsale-constructor} in OpenZeppelin library.
      * @param rate Number of tokens per wei.
@@ -59,7 +63,10 @@ contract MyCrowdsale is
         uint256 cap,
         uint256 openingTime,
         uint256 closingTime,
-        uint256 goal
+        uint256 goal,
+        address foundersFund,
+        address foundationFund,
+        address partnersFund
     )
         public
         Crowdsale(rate, wallet, token)
@@ -71,6 +78,9 @@ contract MyCrowdsale is
             goal <= cap,
             "The crowdsale goal must be less than the cap."
         );
+        _foundersFund = foundersFund;
+        _foundationFund = foundationFund;
+        _partnersFund = partnersFund;
     }
 
     /**
@@ -161,6 +171,17 @@ contract MyCrowdsale is
     function _finalization() internal {
         if(goalReached()) {
             ERC20Mintable _mintableToken = ERC20Mintable(address(token()));
+            uint256 _alreadyMinted = _mintableToken.totalSupply();
+
+            uint256 _finalTotalSupply = _alreadyMinted.div(tokenSalePercent).mul(100);
+
+            // TokenTimelock here if applicable. Adjust receiving addresses of newly minted tokens accordingly.
+
+            _mintableToken.mint(_foundersFund, _finalTotalSupply.div(foundersPercent));
+            _mintableToken.mint(_foundationFund, _finalTotalSupply.div(foundationPercent));
+            _mintableToken.mint(_partnersFund, _finalTotalSupply.div(partnersPercent));
+
+
             _mintableToken.renounceMinter();
             ERC20Pausable _pausableToken = ERC20Pausable(address(token()));
             _pausableToken.unpause();
